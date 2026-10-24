@@ -53,7 +53,6 @@ export const getVehicleById = async (id) => {
 };
 
 export const updateVehicle = async (id, updateData) => {
-  // Validate non-negative numbers if passed
   if (updateData.price !== undefined && updateData.price < 0) {
     const error = new Error('Price cannot be negative');
     error.statusCode = 400;
@@ -91,4 +90,66 @@ export const deleteVehicle = async (id) => {
     throw error;
   }
   return { id, message: 'Vehicle deleted successfully' };
+};
+
+/**
+ * Concurrency-safe atomic purchase operation
+ * Decreases quantity by 1 if and only if quantity > 0
+ */
+export const purchaseVehicle = async (id) => {
+  // Check if vehicle exists
+  const existingVehicle = await Vehicle.findById(id);
+  if (!existingVehicle) {
+    const error = new Error('Vehicle not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (existingVehicle.quantity <= 0) {
+    const error = new Error('Vehicle is out of stock');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Atomic decrement to guarantee stock never drops below 0 even under race conditions
+  const updatedVehicle = await Vehicle.findOneAndUpdate(
+    { _id: id, quantity: { $gt: 0 } },
+    { $inc: { quantity: -1 } },
+    { new: true }
+  );
+
+  if (!updatedVehicle) {
+    const error = new Error('Vehicle is out of stock');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return updatedVehicle.toJSON();
+};
+
+/**
+ * Admin restocking operation
+ * Increases stock quantity by specified positive integer
+ */
+export const restockVehicle = async (id, quantity) => {
+  const qty = Number(quantity);
+  if (!qty || qty <= 0 || !Number.isInteger(qty)) {
+    const error = new Error('Restock quantity must be a positive integer');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const vehicle = await Vehicle.findByIdAndUpdate(
+    id,
+    { $inc: { quantity: qty } },
+    { new: true, runValidators: true }
+  );
+
+  if (!vehicle) {
+    const error = new Error('Vehicle not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return vehicle.toJSON();
 };

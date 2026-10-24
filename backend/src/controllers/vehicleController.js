@@ -89,3 +89,28 @@ export const deleteVehicle = async (req, res, next) => {
     next(error);
   }
 };
+
+export const purchaseVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await vehicleService.purchaseVehicle(req.params.id);
+    res.status(200).json({
+      message: 'Vehicle purchase successful',
+      vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restockVehicle = async (req, res, next) => {
+  try {
+    const { quantity } = req.body;
+    const vehicle = await vehicleService.restockVehicle(req.params.id, quantity);
+    res.status(200).json({
+      message: 'Vehicle restocked successfully',
+      vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
+};
