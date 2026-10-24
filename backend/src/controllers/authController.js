@@ -21,3 +21,30 @@ export const register = async (req, res, next) => {
     next(error);
   }
 };
+
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const result = await authService.loginUser({ email, password });
+    return res.status(200).json({
+      message: 'Login successful',
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMe = async (req, res, next) => {
+  try {
+    const user = await authService.getUserById(req.user.id);
+    return res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};

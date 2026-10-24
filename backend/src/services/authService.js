@@ -17,7 +17,6 @@ export const generateToken = (user) => {
 };
 
 export const registerUser = async ({ name, email, password }) => {
-  // Check if user already exists
   const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
   if (existingUser) {
     const error = new Error('User with this email already exists');
@@ -35,4 +34,39 @@ export const registerUser = async ({ name, email, password }) => {
 
   const token = generateToken(user);
   return { user: user.toJSON(), token };
+};
+
+export const loginUser = async ({ email, password }) => {
+  if (!email || !password) {
+    const error = new Error('Email and password are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!user) {
+    const error = new Error('Invalid credentials');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    const error = new Error('Invalid credentials');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const token = generateToken(user);
+  return { user: user.toJSON(), token };
+};
+
+export const getUserById = async (id) => {
+  const user = await User.findById(id);
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return user.toJSON();
 };
