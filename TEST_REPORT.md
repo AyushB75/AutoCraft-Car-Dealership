@@ -9,6 +9,9 @@
   - Every test run executes against an isolated, high-speed in-memory MongoDB instance.
   - Test suites wipe database collections in `afterEach()` hooks and cleanly disconnect/stop in `afterAll()`.
   - Production database is completely isolated and never exposed to destructive test executions.
+- **Windows Environment Configuration**:
+  - `beforeAll` hook in `tests/setup.js` is explicitly configured with a 60-second timeout (`beforeAll(async () => { ... }, 60000)`), preventing Jest's 5-second default hook timeout from interrupting initial Windows process spawning or download.
+  - Jest `testTimeout` is configured to `30000` ms in `backend/package.json`.
 - **Node.js Version**: `v24.14.0`.
 
 ### Frontend Testing Harness
