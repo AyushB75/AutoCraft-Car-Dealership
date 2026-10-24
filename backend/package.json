@@ -11,7 +11,8 @@
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage --runInBand --detectOpenHandles --forceExit",
     "seed:admin": "node src/scripts/seedAdmin.js",
-    "seed:vehicles": "node src/scripts/seedVehicles.js"
+    "seed:vehicles": "node src/scripts/seedVehicles.js",
+    "demo": "node src/scripts/startDemoServer.js"
   },
   "keywords": [
     "dealership",
