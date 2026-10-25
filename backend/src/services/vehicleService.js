@@ -1,4 +1,5 @@
 import Vehicle from '../models/Vehicle.js';
+import { vehicleInput, text, number, badRequest, escapeRegex } from '../validators/input.js';
 
 export const createVehicle = async (vehicleData) => {
   const vehicle = new Vehicle(vehicleData);
@@ -13,17 +14,24 @@ export const getVehicles = async () => {
 
 export const searchVehicles = async ({ make, model, category, minPrice, maxPrice }) => {
   const query = {};
+  for (const [field, value] of Object.entries({ make, model, category })) {
+    if (value !== undefined && value !== '') text(value, field);
+  }
+  for (const [field, value] of Object.entries({ minPrice, maxPrice })) {
+    if (value !== undefined && (typeof value !== 'string' || value.trim() === '' || !Number.isFinite(Number(value)) || Number(value) < 0)) throw badRequest(`Invalid ${field}.`);
+  }
+  if (minPrice !== undefined && maxPrice !== undefined && Number(minPrice) > Number(maxPrice)) throw badRequest('Minimum price cannot exceed maximum price.');
 
   if (make && make.trim()) {
-    query.make = { $regex: make.trim(), $options: 'i' };
+    query.make = { $regex: escapeRegex(make.trim()), $options: 'i' };
   }
 
   if (model && model.trim()) {
-    query.model = { $regex: model.trim(), $options: 'i' };
+    query.model = { $regex: escapeRegex(model.trim()), $options: 'i' };
   }
 
   if (category && category.trim()) {
-    query.category = { $regex: `^${category.trim()}$`, $options: 'i' };
+    query.category = { $regex: `^${escapeRegex(category.trim())}$`, $options: 'i' };
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
@@ -53,6 +61,7 @@ export const getVehicleById = async (id) => {
 };
 
 export const updateVehicle = async (id, updateData) => {
+  updateData = vehicleInput(updateData, true);
   if (updateData.price !== undefined && updateData.price < 0) {
     const error = new Error('Price cannot be negative');
     error.statusCode = 400;
@@ -132,7 +141,7 @@ export const purchaseVehicle = async (id) => {
  * Increases stock quantity by specified positive integer
  */
 export const restockVehicle = async (id, quantity) => {
-  const qty = Number(quantity);
+  const qty = number(quantity, 'Restock quantity', true);
   if (!qty || qty <= 0 || !Number.isInteger(qty)) {
     const error = new Error('Restock quantity must be a positive integer');
     error.statusCode = 400;

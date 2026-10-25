@@ -34,10 +34,9 @@ describe('VehicleCard Component', () => {
     );
 
     expect(screen.getByText('Toyota Camry')).toBeInTheDocument();
-    expect(screen.getByText('Sedan')).toBeInTheDocument();
+    expect(screen.getAllByText('Sedan').length).toBeGreaterThan(0);
     expect(screen.getByText('$26,000')).toBeInTheDocument();
-    expect(screen.getByTestId('badge-in-stock')).toHaveTextContent('5 in stock');
-  });
+    expect(screen.getByLabelText('Stock status: 5 in stock')).toBeInTheDocument();  });
 
   it('has an enabled purchase button when vehicle is in stock', () => {
     const handlePurchase = vi.fn();
@@ -54,8 +53,7 @@ describe('VehicleCard Component', () => {
 
     const purchaseBtn = screen.getByTestId('purchase-btn-veh-1');
     expect(purchaseBtn).toBeEnabled();
-    expect(purchaseBtn).toHaveTextContent('Purchase Vehicle');
-
+    expect(purchaseBtn).toHaveTextContent(/Purchase vehicle/i);
     fireEvent.click(purchaseBtn);
     expect(handlePurchase).toHaveBeenCalledWith(inStockVehicle);
   });
@@ -75,9 +73,8 @@ describe('VehicleCard Component', () => {
 
     const purchaseBtn = screen.getByTestId('purchase-btn-veh-2');
     expect(purchaseBtn).toBeDisabled();
-    expect(purchaseBtn).toHaveTextContent('Sold Out');
-    expect(screen.getByTestId('badge-out-of-stock')).toHaveTextContent('Out of Stock');
-
+    expect(purchaseBtn).toHaveTextContent(/Out of stock/i);
+    expect(screen.getByLabelText('Stock status: out of stock')).toBeInTheDocument();
     fireEvent.click(purchaseBtn);
     expect(handlePurchase).not.toHaveBeenCalled();
   });

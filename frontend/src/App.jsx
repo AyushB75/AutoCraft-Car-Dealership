@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './context/AuthContext';
 import api from './services/api';
 import Navbar from './components/Navbar';
@@ -7,12 +7,14 @@ import FilterBar from './components/FilterBar';
 import AdminModal from './components/AdminModal';
 import AuthModal from './components/AuthModal';
 import Alert from './components/Alert';
-import { Car, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
+import { Car, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const { isAdmin, isAuthenticated, openAuthModal } = useAuth();
 
   const [vehicles, setVehicles] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const requestId = useRef(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notification, setNotification] = useState(null); // { type, message }
@@ -40,6 +42,7 @@ export default function App() {
 
   // Fetch vehicles (either all or filtered)
   const fetchVehicles = useCallback(async () => {
+    const currentRequest = ++requestId.current;
     setLoading(true);
     setError('');
     try {
@@ -52,21 +55,33 @@ export default function App() {
       );
 
       let data;
+      let total;
       if (hasFilters) {
-        data = await api.searchVehicles(filters);
+        const [filtered, all] = await Promise.all([api.searchVehicles(filters), api.getVehicles()]);
+        data = filtered;
+        total = all.vehicles.length;
       } else {
         data = await api.getVehicles();
+        total = data.vehicles.length;
       }
+      if (currentRequest !== requestId.current) return;
       setVehicles(data.vehicles || []);
+      setTotalCount(total);
     } catch (err) {
+      if (currentRequest !== requestId.current) return;
       setError(err.message || 'Failed to load vehicles from dealership catalog.');
     } finally {
-      setLoading(false);
+      if (currentRequest === requestId.current) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
+    // Synchronize the catalog with the remote API when filters change.
+    // eslint-disable-next-line react/set-state-in-effect
     fetchVehicles();
+    // This ref is a request sequence, not a DOM node; invalidate the latest request on cleanup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { requestId.current++; };
   }, [fetchVehicles]);
 
   const handleResetFilters = () => {
@@ -171,34 +186,31 @@ export default function App() {
     try {
       if (adminModal.mode === 'add') {
         const res = await api.createVehicle(payload);
-        setVehicles(prev => [res.vehicle, ...prev]);
         setNotification({
           type: 'success',
           message: `Vehicle ${res.vehicle.make} ${res.vehicle.model} added to inventory.`,
         });
       } else if (adminModal.mode === 'edit') {
         const res = await api.updateVehicle(payload.id, payload.data);
-        setVehicles(prev => prev.map(v => (v.id === payload.id ? res.vehicle : v)));
         setNotification({
           type: 'success',
           message: `Vehicle ${res.vehicle.make} ${res.vehicle.model} updated successfully.`,
         });
       } else if (adminModal.mode === 'restock') {
         const res = await api.restockVehicle(payload.id, payload.quantity);
-        setVehicles(prev => prev.map(v => (v.id === payload.id ? res.vehicle : v)));
         setNotification({
           type: 'success',
           message: `Restocked ${res.vehicle.make} ${res.vehicle.model}. Current stock: ${res.vehicle.quantity}.`,
         });
       } else if (adminModal.mode === 'delete') {
         await api.deleteVehicle(payload);
-        setVehicles(prev => prev.filter(v => v.id !== payload));
         setNotification({
           type: 'success',
           message: 'Vehicle removed from catalog successfully.',
         });
       }
       handleCloseAdminModal();
+      await fetchVehicles();
     } catch (err) {
       setAdminModal(prev => ({
         ...prev,
@@ -251,7 +263,7 @@ export default function App() {
           filters={filters}
           setFilters={setFilters}
           onReset={handleResetFilters}
-          totalCount={vehicles.length}
+          totalCount={totalCount}
           resultCount={vehicles.length}
         />
 
@@ -271,7 +283,7 @@ export default function App() {
         )}
 
         {/* Vehicle Grid / States */}
-        {loading ? (
+        {error ? null : loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(n => (
               <div

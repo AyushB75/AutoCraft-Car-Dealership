@@ -4,6 +4,10 @@ import { authenticate } from '../middleware/authMiddleware.js';
 import { requireRole } from '../middleware/roleMiddleware.js';
 
 const router = Router();
+router.param('id', (req, res, next, id) => {
+  if (!/^[a-f\d]{24}$/i.test(id)) return res.status(400).json({ message: 'Invalid vehicle ID' });
+  next();
+});
 
 // Public routes
 router.get('/', vehicleController.getVehicles);

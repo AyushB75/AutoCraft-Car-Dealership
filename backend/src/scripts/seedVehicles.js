@@ -1,10 +1,7 @@
-import dotenv from 'dotenv';
+import { config } from '../config/environment.js';
 import mongoose from 'mongoose';
 import Vehicle from '../models/Vehicle.js';
 
-dotenv.config();
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/car_dealership';
 
 const sampleVehicles = [
   { make: 'Toyota', model: 'Camry Hybrid', category: 'Sedan', price: 28855, quantity: 8 },
@@ -21,7 +18,7 @@ const sampleVehicles = [
 
 async function seedVehicles() {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 5000 });
     console.log('Connected to MongoDB database');
 
     const count = await Vehicle.countDocuments();
@@ -34,7 +31,7 @@ async function seedVehicles() {
     console.log(`Successfully seeded ${sampleVehicles.length} demo vehicles into catalog.`);
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding vehicles:', error.message);
+    console.error('Vehicle seeding failed. Check database availability and configuration.');
     process.exit(1);
   }
 }

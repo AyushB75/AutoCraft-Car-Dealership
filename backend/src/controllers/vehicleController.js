@@ -1,8 +1,9 @@
 import * as vehicleService from '../services/vehicleService.js';
+import { vehicleInput } from '../validators/input.js';
 
 export const createVehicle = async (req, res, next) => {
   try {
-    const { make, model, category, price, quantity } = req.body;
+    const { make, model, category, price, quantity } = vehicleInput(req.body);
 
     if (!make || !model || !category || price === undefined || quantity === undefined) {
       return res.status(400).json({

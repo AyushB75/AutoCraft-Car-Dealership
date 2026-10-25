@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import useDialog from '../hooks/useDialog';
 import { X, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 
-export default function AuthModal() {
+function AuthModalForm() {
   const {
     authModalOpen,
     authModalTab,
@@ -21,6 +22,7 @@ export default function AuthModal() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const dialogRef = useDialog(authModalOpen, closeAuthModal, loading);
 
   if (!authModalOpen) return null;
 
@@ -52,9 +54,12 @@ export default function AuthModal() {
     <div
       role="dialog"
       aria-modal="true"
+      aria-label={authModalTab === 'login' ? 'Sign In' : 'Register'}
+      ref={dialogRef}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
     >
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
         {/* Header with Tabs */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-2">
@@ -92,6 +97,7 @@ export default function AuthModal() {
 
           <button
             onClick={closeAuthModal}
+            disabled={loading}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Close modal"
           >
@@ -119,10 +125,11 @@ export default function AuthModal() {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {authModalTab === 'register' && (
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              <label htmlFor="auth-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                 Full Name
               </label>
               <input
+                  id="auth-name"
                 type="text"
                 required
                 placeholder="Jane Doe"
@@ -134,10 +141,11 @@ export default function AuthModal() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label htmlFor="auth-email" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
               Email Address
             </label>
             <input
+                  id="auth-email"
               type="email"
               required
               placeholder="you@example.com"
@@ -148,20 +156,21 @@ export default function AuthModal() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label htmlFor="auth-password" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
               Password
             </label>
             <input
+                  id="auth-password"
               type="password"
               required
-              minLength={6}
+              minLength={8}
               placeholder="••••••••"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
             {authModalTab === 'register' && (
-              <p className="mt-1 text-xs text-slate-400">Must be at least 6 characters.</p>
+              <p className="mt-1 text-xs text-slate-400">Must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.</p>
             )}
           </div>
 
@@ -176,4 +185,9 @@ export default function AuthModal() {
       </div>
     </div>
   );
+}
+
+export default function AuthModal() {
+  const { authModalOpen, authModalTab } = useAuth();
+  return authModalOpen ? <AuthModalForm key={authModalTab} /> : null;
 }

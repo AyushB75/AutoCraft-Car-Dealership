@@ -48,6 +48,13 @@
       "<rootDir>/tests/setup.js"
     ],
     "testTimeout": 30000,
-    "verbose": true
+    "verbose": true,
+    "setupFiles": [
+      "<rootDir>/tests/environment.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/scripts/startDemoServer.js"
+    ]
   }
 }

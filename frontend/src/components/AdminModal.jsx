@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import useDialog from '../hooks/useDialog';
 import { X, PlusCircle, Edit3, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 
 const CATEGORIES = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Electric', 'Truck'];
 
-export default function AdminModal({
+function AdminModalForm({
   isOpen,
   mode, // 'add' | 'edit' | 'restock' | 'delete'
   vehicle,
@@ -12,37 +13,14 @@ export default function AdminModal({
   loading = false,
   error = '',
 }) {
-  const [formData, setFormData] = useState({
-    make: '',
-    model: '',
-    category: 'Sedan',
-    price: '',
-    quantity: '',
-  });
+  const [formData, setFormData] = useState(() => ({
+    make: vehicle?.make || '', model: vehicle?.model || '', category: vehicle?.category || 'Sedan',
+    price: vehicle?.price !== undefined ? String(vehicle.price) : '', quantity: vehicle?.quantity !== undefined ? String(vehicle.quantity) : '',
+  }));
 
   const [restockQty, setRestockQty] = useState('');
 
-  useEffect(() => {
-    if (vehicle && mode === 'edit') {
-      setFormData({
-        make: vehicle.make || '',
-        model: vehicle.model || '',
-        category: vehicle.category || 'Sedan',
-        price: vehicle.price !== undefined ? String(vehicle.price) : '',
-        quantity: vehicle.quantity !== undefined ? String(vehicle.quantity) : '',
-      });
-    } else if (mode === 'add') {
-      setFormData({
-        make: '',
-        model: '',
-        category: 'Sedan',
-        price: '',
-        quantity: '',
-      });
-    } else if (mode === 'restock') {
-      setRestockQty('');
-    }
-  }, [vehicle, mode, isOpen]);
+  const dialogRef = useDialog(isOpen, onClose, loading);
 
   if (!isOpen) return null;
 
@@ -80,9 +58,12 @@ export default function AdminModal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="admin-dialog-title"
+      ref={dialogRef}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
     >
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2">
@@ -90,7 +71,7 @@ export default function AdminModal({
             {mode === 'edit' && <Edit3 className="w-5 h-5 text-indigo-600" />}
             {mode === 'restock' && <RefreshCw className="w-5 h-5 text-emerald-600" />}
             {mode === 'delete' && <Trash2 className="w-5 h-5 text-red-600" />}
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 id="admin-dialog-title" className="text-lg font-bold text-slate-900">
               {mode === 'add' && 'Add New Vehicle'}
               {mode === 'edit' && `Edit ${vehicle?.make} ${vehicle?.model}`}
               {mode === 'restock' && `Restock ${vehicle?.make} ${vehicle?.model}`}
@@ -99,6 +80,7 @@ export default function AdminModal({
           </div>
           <button
             onClick={onClose}
+            disabled={loading}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Close dialog"
           >
@@ -119,10 +101,11 @@ export default function AdminModal({
           {(mode === 'add' || mode === 'edit') && (
             <>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                <label htmlFor="admin-make" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                   Make
                 </label>
                 <input
+                  id="admin-make"
                   type="text"
                   required
                   placeholder="e.g. Toyota, Tesla"
@@ -133,10 +116,11 @@ export default function AdminModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                <label htmlFor="admin-model" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                   Model
                 </label>
                 <input
+                  id="admin-model"
                   type="text"
                   required
                   placeholder="e.g. Camry, Model 3"
@@ -147,10 +131,11 @@ export default function AdminModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                <label htmlFor="admin-category" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                   Category
                 </label>
                 <select
+                  id="admin-category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -164,10 +149,11 @@ export default function AdminModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                <label htmlFor="admin-price" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                   Price ($)
                 </label>
                 <input
+                  id="admin-price"
                   type="number"
                   required
                   min="0"
@@ -181,10 +167,11 @@ export default function AdminModal({
 
               {mode === 'add' && (
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                  <label htmlFor="admin-quantity" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                     Initial Stock Quantity
                   </label>
                   <input
+                  id="admin-quantity"
                     type="number"
                     required
                     min="0"
@@ -205,10 +192,11 @@ export default function AdminModal({
                 Current inventory stock is{' '}
                 <strong className="text-slate-900">{vehicle?.quantity || 0} units</strong>.
               </p>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              <label htmlFor="admin-restock" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                 Quantity to Add (Positive Integer)
               </label>
               <input
+                  id="admin-restock"
                 type="number"
                 required
                 min="1"
@@ -274,4 +262,8 @@ export default function AdminModal({
       </div>
     </div>
   );
+}
+
+export default function AdminModal(props) {
+  return props.isOpen ? <AdminModalForm key={`${props.mode}-${props.vehicle?.id || 'new'}`} {...props} /> : null;
 }

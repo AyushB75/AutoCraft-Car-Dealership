@@ -1,16 +1,20 @@
-# React + Vite
+# Frontend — AutoCraft
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite single-page interface for the real dealership backend. See the [root README](../README.md) for setup, API assumptions, admin provisioning, test evidence, and assessment limitations.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Use Node 24 (verified: 24.14.0). Run `npm ci`, configure `VITE_API_BASE_URL` in a private `.env` (example: `http://localhost:5000/api`), then `npm run dev`. The backend must use a matching `CLIENT_URL`. Vite exposes `VITE_*` values to the browser; never put secrets in them.
 
-## React Compiler
+## Checks
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm test`: Vitest/Testing Library/jsdom tests.
+- `npm run lint`: Oxlint checks; does not rewrite source.
+- `npm run build`: production assets in `dist/`.
+- `npm run preview`: local preview of a completed build.
 
-## Expanding the Oxlint configuration
+## Behavior
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+`AuthContext` maintains the session; `services/api.js` attaches the token and signals expired sessions. `App.jsx` fetches inventory, ignores obsolete search responses, refetches active filters after admin changes, and displays total versus matching count. Dialogs use explicit labels, accessible names, focus containment, Escape handling, and focus restoration.
+
+Totals use a separate full-catalog request, so this implementation favors simplicity over large-catalog scalability. No frontend coverage measurement or TypeScript typecheck is claimed. Tokens are in localStorage, and production hardening remains separate work.

@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_development_secret_dealership_2026';
+import { config } from '../config/environment.js';
 
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,7 +11,10 @@ export const authenticate = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
+    if (!/^[a-f\d]{24}$/i.test(decoded.id) || !['user', 'admin'].includes(decoded.role)) {
+      return res.status(401).json({ message: 'Invalid token identity.' });
+    }
     req.user = decoded;
     next();
   } catch (error) {

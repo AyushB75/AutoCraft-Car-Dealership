@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, RotateCcw, SlidersHorizontal, DollarSign } from 'lucide-react';
+import { Search, RotateCcw, DollarSign } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Sedan', 'SUV', 'Coupe', 'Hatchback', 'Electric', 'Truck'];
 

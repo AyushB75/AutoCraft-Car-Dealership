@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { config } from '../config/environment.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_development_secret_dealership_2026';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 export const generateToken = (user) => {
   return jwt.sign(
@@ -11,8 +10,8 @@ export const generateToken = (user) => {
       email: user.email,
       role: user.role
     },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    config.jwtSecret,
+    { expiresIn: config.jwtExpiresIn, algorithm: 'HS256' }
   );
 };
 

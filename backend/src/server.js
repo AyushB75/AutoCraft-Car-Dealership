@@ -1,34 +1,32 @@
-import dotenv from 'dotenv';
+import { config } from './config/environment.js';
 import mongoose from 'mongoose';
+import { ensureInitialAdmin } from './services/adminSeedService.js';
+import { pathToFileURL } from 'node:url';
 import app from './app.js';
 
-dotenv.config();
-
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/car_dealership';
-
-async function startServer() {
+export async function startServer() {
+  await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 5000 });
+  await ensureInitialAdmin();
   try {
-    if (MONGODB_URI) {
-      await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 3000
-      });
-      console.log('Connected to MongoDB database successfully');
-    }
+    const server = await new Promise((resolve, reject) => {
+      const listener = app.listen(config.port, '127.0.0.1', () => resolve(listener));
+      listener.once('error', reject);
+    });
+    console.log(`Car Dealership Backend ready on http://127.0.0.1:${config.port}`);
+    return server;
   } catch (error) {
-    console.warn('MongoDB connection warning:', error.message);
-    console.warn('Server starting in offline-DB mode. Run MongoDB or update MONGODB_URI in .env');
+    await mongoose.disconnect();
+    throw error;
   }
+}
 
-  const server = app.listen(PORT, () => {
-    console.log(`Car Dealership Backend running on http://localhost:${PORT}`);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startServer().then(server => {
+    const stop = () => server.close(async () => { await mongoose.disconnect(); process.exit(0); });
+    process.once('SIGINT', stop);
+    process.once('SIGTERM', stop);
+  }).catch(() => {
+    console.error('Backend startup failed. Check database availability and environment configuration.');
+    process.exitCode = 1;
   });
-
-  return server;
 }
-
-if (process.env.NODE_ENV !== 'test') {
-  startServer();
-}
-
-export { startServer };

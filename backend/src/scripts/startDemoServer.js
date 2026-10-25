@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 
+// Legacy mock: no persistence, real authentication, or complete admin API.
+// Never use this server as assessment verification evidence.
+if (process.env.NODE_ENV === 'production') throw new Error('The mock demo server is disabled in production.');
+
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -58,8 +62,8 @@ app.get('/api/auth/me', (req, res) => {
   });
 });
 
-const server = app.listen(5000, () => {
-  console.log('Demo server live on http://localhost:5000');
+const server = app.listen(5001, '127.0.0.1', () => {
+  console.log('MOCK ONLY: insecure, non-persistent demo on http://127.0.0.1:5001. Not the assessment backend.');
 });
 
 export default server;

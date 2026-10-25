@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext(null);
@@ -18,8 +18,16 @@ export function AuthProvider({ children }) {
   const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
 
+  const logout = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+  }, []);
+
   // Validate token with backend on mount
   useEffect(() => {
+    let cancelled = false;
     async function verifySession() {
       if (!token) {
         setLoading(false);
@@ -28,13 +36,14 @@ export function AuthProvider({ children }) {
 
       try {
         const data = await api.getMe();
+        if (cancelled) return;
         setUser(data.user);
         localStorage.setItem('auth_user', JSON.stringify(data.user));
-      } catch (err) {
+      } catch {
         // Token invalid or expired
-        logout();
+        if (!cancelled) logout();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -49,8 +58,8 @@ export function AuthProvider({ children }) {
     };
 
     window.addEventListener('auth:expired', handleExpired);
-    return () => window.removeEventListener('auth:expired', handleExpired);
-  }, [token]);
+    return () => { cancelled = true; window.removeEventListener('auth:expired', handleExpired); };
+  }, [token, logout]);
 
   const login = async (email, password) => {
     const data = await api.login({ email, password });
@@ -74,12 +83,7 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-  };
+
 
   const openAuthModal = (tab = 'login') => {
     setAuthModalTab(tab);
@@ -111,6 +115,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

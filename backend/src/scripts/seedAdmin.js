@@ -1,45 +1,35 @@
-import dotenv from 'dotenv';
+import { config } from '../config/environment.js';
 import mongoose from 'mongoose';
+import { pathToFileURL } from 'node:url';
 import User from '../models/User.js';
+import { authInput } from '../validators/input.js';
 
-dotenv.config();
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/car_dealership';
-const ADMIN_NAME = process.env.INITIAL_ADMIN_NAME || 'Admin User';
-const ADMIN_EMAIL = process.env.INITIAL_ADMIN_EMAIL || 'admin@dealership.com';
-const ADMIN_PASSWORD = process.env.INITIAL_ADMIN_PASSWORD || 'AdminSecurePassword123!';
-
-async function seedAdmin() {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB database');
-
-    const existingAdmin = await User.findOne({ email: ADMIN_EMAIL.toLowerCase().trim() });
-    if (existingAdmin) {
-      if (existingAdmin.role !== 'admin') {
-        existingAdmin.role = 'admin';
-        await existingAdmin.save();
-        console.log(`Updated user ${ADMIN_EMAIL} role to admin.`);
-      } else {
-        console.log(`Admin user ${ADMIN_EMAIL} already exists.`);
-      }
-      process.exit(0);
-    }
-
-    const admin = new User({
-      name: ADMIN_NAME,
-      email: ADMIN_EMAIL.toLowerCase().trim(),
-      password: ADMIN_PASSWORD,
-      role: 'admin'
-    });
-
-    await admin.save();
-    console.log(`Successfully created initial admin user: ${ADMIN_EMAIL}`);
-    process.exit(0);
-  } catch (error) {
-    console.error('Error seeding admin user:', error.message);
-    process.exit(1);
+export function adminInput(env = process.env) {
+  const password = env.INITIAL_ADMIN_PASSWORD;
+  if (!password || password.length < 12 || /^(your|replace|change|AdminSecurePassword)/i.test(password)) {
+    throw new Error('Set INITIAL_ADMIN_PASSWORD to a unique password of at least 12 characters.');
   }
+  return authInput({ name: env.INITIAL_ADMIN_NAME || 'Admin User', email: env.INITIAL_ADMIN_EMAIL, password }, true);
 }
 
-seedAdmin();
+export async function seedAdmin() {
+  const input = adminInput();
+  try {
+    await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 5000 });
+    const existing = await User.findOne({ email: input.email });
+    if (existing) {
+      if (existing.role !== 'admin') throw new Error('Account already exists as a customer. Automatic promotion is refused.');
+      console.log('Administrator already exists; credentials were not changed.');
+      return;
+    }
+    await User.create({ ...input, role: 'admin' });
+    console.log('Initial administrator created.');
+  } finally { await mongoose.disconnect(); }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seedAdmin().catch(() => {
+    console.error('Admin setup failed. Check explicit admin credentials and database availability; no automatic customer promotion is allowed.');
+    process.exitCode = 1;
+  });
+}

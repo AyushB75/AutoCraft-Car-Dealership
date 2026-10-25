@@ -1,9 +1,11 @@
-# AI Interaction Prompts & Raw Session Records
+# AI Interaction Prompts — Curated Extract and Provenance
 
-This document contains the raw, unedited prompts provided during the Incubyte Software Craftsman Internship assessment for the Car Dealership Inventory System.
+This document preserves a curated historical prompt extract from the Car Dealership Inventory System project. It is NOT a complete raw conversation transcript. Formatting differs from the source, and the original three-prompt extract omitted later user messages, assistant replies, and tool output.
 
 Session Conversation ID: `25a346cf-3b33-433a-9dfa-65fd3e9d0ca0`
 System Transcript Source: `C:\Users\HP\.gemini\antigravity\brain\25a346cf-3b33-433a-9dfa-65fd3e9d0ca0\.system_generated\logs\transcript.jsonl`
+
+> **Preserved private transcript**: The existing `conversation_transcript.jsonl` export (604,343 bytes) is retained unchanged and remains excluded by `.gitignore`. It contains internal system/tool material and may contain private configuration; do not upload it blindly. This preserves the purpose of the pre-existing local amendment without claiming that a curated prompt list satisfies deliverable D. The recorded source contains five user-input entries, not only the three reproduced below.
 
 ---
 
@@ -388,3 +390,11 @@ Maintain clean, incremental Git commits with the required AI co-author attributi
 
 Before finishing, verify the actual assessment requirements against the implementation, run all available checks, inspect git status and commit history, and report what passed, what remains incomplete, and any blockers. Do not publish, deploy, or submit the project without my approval.
 ```
+
+## October 25, 2026 remediation session — notes, not a transcript
+
+OpenAI Codex audited and then modified the existing project at the owner's explicit request. The owner required a recoverable backup, preservation of commits/environment files/raw transcript, fixes and real verification, and no commits/publication/submission. This paragraph is an authored summary, not a reconstructed chat log or a verbatim prompt.
+
+The original three prompt sections above are preserved as historical curated material. Two later user-input entries exist in the private transcript: a Windows backend timeout-fix request and a final deliverables-audit request. Assistant responses and tool calls are also absent from this Markdown extract. The current Codex chat is not included in the earlier Antigravity export.
+
+Before submission, compare the original assessment wording and export/review the relevant user-visible conversations (both sessions), or provide a genuine share link if the rubric accepts one. No complete chat export/share link is fabricated here. The private raw file remains recoverable locally and in the pre-change backup; do not expose system content or secrets merely to satisfy a documentation checkbox. Exact acceptance of this deliverable remains unverified until the original specification and safe export are available.

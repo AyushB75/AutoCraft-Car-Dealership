@@ -26,7 +26,7 @@ async function request(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401 && !endpoint.includes('/auth/login')) {
+    if (response.status === 401 && !endpoint.includes('/auth/login') && token === localStorage.getItem('auth_token')) {
       // Token expired or invalid
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
