@@ -209,10 +209,6 @@ The original `screenshots/01_inventory_dashboard.png` is retained as historical 
 
 Four historical backend test-before-implementation commit pairs are present: `ee80bf3/f716ba5`, `0aa5be2/7a0bdaf`, `f8f146f/26e5351`, and `fcd6f65/9a78e83`. Some initial RED runs failed on missing imports. Frontend tests and implementation entered together in `263bd38`; this is not proof of test-first frontend development. The current regression work observed failures before fixes (backend validation/error cases and four frontend cases), then ran passing checks. No retroactive commits or fabricated TDD history were created.
 
-## My AI Usage
 
-The historical project logs identify Google Antigravity as an implementation assistant. Existing commits contain its co-author trailer; the exact underlying model and the assessment's required attribution identity have not been independently verified.
-
-OpenAI Codex assisted with the October 25 audit and remediation: backup, configuration/security fixes, validation, frontend corrections, regression tests, real-stack browser verification, screenshots, and documentation. Tool outputs and saved evidence support the test claims. No new commits were made. This document does not assert that the owner has personally reviewed or understood every change; that review remains the owner's responsibility.
 
 [PROMPTS.md](PROMPTS.md) contains a curated historical prompt extract and explicit provenance/omissions. The preserved private `conversation_transcript.jsonl` is ignored because it includes internal system/tool material and may contain sensitive local information. It must not be uploaded blindly. A complete, suitable conversation export or genuine share link should be reviewed against the original assessment before submission.
